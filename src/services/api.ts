@@ -534,6 +534,13 @@ class ApiService {
     });
   }
 
+  public async chatWithCopilot(message: string) {
+    return this.request<{ reply: string; timestamp: string; tenantId: string }>('/api/v1/ai/chat', {
+      method: 'POST',
+      body: JSON.stringify({ message }),
+    });
+  }
+
   // Health
   public async getHealth() {
     return this.request<any>('/api/v1/health');

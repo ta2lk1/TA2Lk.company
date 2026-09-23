@@ -15,6 +15,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onSuccess,
   mode = 'login',
 }) => {
+  const demoMode = import.meta.env.VITE_DEMO_MODE === 'true';
   const [currentMode, setCurrentMode] = useState<'login' | 'register' | 'create-org'>(mode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -174,7 +175,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </form>
 
         {/* Quick Persona Switcher for Evaluation */}
-        {currentMode === 'login' && (
+        {currentMode === 'login' && demoMode && (
           <div className="pt-3 border-t border-zinc-800">
             <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 mb-2">
               Instant Persona Switch (Testing Multi-Tenancy & RBAC):

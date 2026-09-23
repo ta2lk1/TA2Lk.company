@@ -29,6 +29,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function bootstrapDefaultData() {
+  if (process.env.DEMO_MODE !== 'true') {
+    return;
+  }
+
   // Ensure default demo organizations and users exist for seamless testing
   const existingAdmin = db.getUserByEmail('admin@industrial-brain.internal');
   if (!existingAdmin) {

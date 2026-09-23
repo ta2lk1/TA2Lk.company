@@ -28,6 +28,10 @@ export function authenticate(req: AuthenticatedRequest, res: Response, next: Nex
   const token = authHeader.substring(7);
   try {
     const payload = verifyToken(token);
+    const user = db.getUserById(payload.userId);
+    if (!user || !user.isActive) {
+      throw new Error('User account is inactive or no longer exists');
+    }
     req.user = payload;
     next();
   } catch (err) {

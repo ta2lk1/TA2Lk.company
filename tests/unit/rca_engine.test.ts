@@ -34,11 +34,12 @@ export async function runRCAEngineUnitTests(): Promise<{ passed: number; failed:
     entityType: 'Machine',
     canonicalId: 'CNC-5AXIS-03',
     name: 'Hermle C42U 5-Axis Milling Center',
+    category: 'ASSET',
     attributes: { maxRpm: 18000 },
-    dataSourceIds: ['SAP'],
-    confidence: 1.0,
+    sourceRefs: [{ sourceId: 'SAP', externalId: 'CNC-5AXIS-03', confidence: 1.0 }],
     version: 1,
-    status: 'ACTIVE',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   });
 
   // Setup Troubleshooting Manual

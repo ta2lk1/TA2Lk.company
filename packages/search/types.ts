@@ -8,7 +8,7 @@ export interface IndustrialDocument {
   title: string;
   docType: 'MANUAL' | 'SOP' | 'MAINTENANCE_LOG' | 'TECH_SPEC' | 'INCIDENT_REPORT';
   sourceFile?: string;
-  mimeType: string;
+  mimeType?: string;
   content: string;
   metadata: Record<string, unknown>;
   linkedEntityIds: string[]; // Linked Knowledge Graph entity IDs

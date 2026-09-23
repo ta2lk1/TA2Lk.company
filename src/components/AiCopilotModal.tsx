@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { X, Send, Cpu, Sparkles, MessageSquare, ShieldCheck, CheckCircle2 } from 'lucide-react';
-import { TenantSession } from '../services/api.ts';
+import { X, Send, Sparkles } from 'lucide-react';
+import { api, OrganizationInfo } from '../services/api.ts';
 
 interface AiCopilotModalProps {
   isOpen: boolean;
   onClose: () => void;
-  activeTenant: TenantSession | null;
+  activeTenant: OrganizationInfo | null;
 }
 
 interface Message {
@@ -18,7 +18,7 @@ export const AiCopilotModal: React.FC<AiCopilotModalProps> = ({ isOpen, onClose,
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: `Hello! I am your Industrial AI Copilot powered by Gemini. I have real-time access to telemetry, machine health, and manuals for **${activeTenant?.organizationName || 'your facility'}**. How can I assist you with your operations today?`,
+      content: `Hello! I am your Industrial AI Copilot powered by Gemini. I have real-time access to telemetry, machine health, and manuals for **${activeTenant?.name || 'your facility'}**. How can I assist you with your operations today?`,
       timestamp: new Date().toLocaleTimeString(),
     },
   ]);
@@ -40,20 +40,12 @@ export const AiCopilotModal: React.FC<AiCopilotModalProps> = ({ isOpen, onClose,
 
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/ai/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: userMsg,
-          tenantId: activeTenant?.tenantId || 'apex-mfg',
-        }),
-      });
-      const data = await res.json();
+      const data = await api.chatWithCopilot(userMsg);
       setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
-          content: data.reply || data.error || 'No response received.',
+          content: data.reply || 'No response received.',
           timestamp: new Date().toLocaleTimeString(),
         },
       ]);
@@ -95,7 +87,7 @@ export const AiCopilotModal: React.FC<AiCopilotModalProps> = ({ isOpen, onClose,
                 </span>
               </h2>
               <p className="text-xs text-zinc-400">
-                Contextual Operations Assistant — {activeTenant?.organizationName}
+                Contextual Operations Assistant — {activeTenant?.name}
               </p>
             </div>
           </div>

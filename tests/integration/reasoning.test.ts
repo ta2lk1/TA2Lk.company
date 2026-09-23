@@ -36,11 +36,12 @@ export async function runReasoningIntegrationTests(): Promise<{ passed: number; 
     entityType: 'Machine',
     canonicalId: 'CNC-5AXIS-03',
     name: 'Hermle C42U 5-Axis Milling Center',
+    category: 'ASSET',
     attributes: { criticalAsset: true },
-    dataSourceIds: ['SAP_ERP'],
-    confidence: 1.0,
+    sourceRefs: [{ sourceId: 'SAP_ERP', externalId: 'CNC-5AXIS-03', confidence: 1.0 }],
     version: 1,
-    status: 'ACTIVE',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   });
 
   const alphaManual: IndustrialDocument = {

@@ -6,7 +6,13 @@
 import crypto from 'crypto';
 import { AuditLog } from '../shared/types.ts';
 
-const DEFAULT_AUDIT_SECRET = process.env.AUDIT_HMAC_KEY || 'default-audit-hmac-key-dev-only-32bytes';
+const DEFAULT_AUDIT_SECRET = process.env.AUDIT_HMAC_KEY || (process.env.NODE_ENV === 'production'
+  ? (() => { throw new Error('AUDIT_HMAC_KEY must be configured in production'); })()
+  : 'default-audit-hmac-key-dev-only-32bytes');
+
+if (process.env.NODE_ENV === 'production' && DEFAULT_AUDIT_SECRET.length < 32) {
+  throw new Error('AUDIT_HMAC_KEY must be at least 32 characters in production');
+}
 
 /**
  * Computes a deterministic, tamper-evident HMAC-SHA256 checksum for an audit entry.

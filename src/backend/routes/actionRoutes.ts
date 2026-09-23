@@ -156,7 +156,7 @@ actionRouter.post(
           blockedReason: result.guardrailsEvaluation.blockedReason,
           auditChecksum: result.auditChecksum,
         },
-        status: result.status === 'SUCCESS' ? 'SUCCESS' : 'FAILED',
+        status: result.status === 'SUCCESS' ? 'SUCCESS' : 'FAILURE',
       });
 
       res.status(200).json(result);
@@ -208,7 +208,7 @@ actionRouter.post(
           targetValue: feedback.targetValue,
           rollbackTriggered: feedback.rollbackTriggered,
         },
-        status: feedback.isResolved ? 'SUCCESS' : 'FAILED',
+        status: feedback.isResolved ? 'SUCCESS' : 'FAILURE',
       });
 
       res.status(200).json(feedback);

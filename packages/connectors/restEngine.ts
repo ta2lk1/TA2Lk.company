@@ -39,7 +39,7 @@ export class RestEngine {
       throw new Error(`Forbidden protocol: '${parsed.protocol}'. Only HTTP/HTTPS allowed.`);
     }
 
-    const host = parsed.hostname.toLowerCase();
+    const host = parsed.hostname.toLowerCase().replace(/^\[|\]$/g, '');
 
     // SSRF Blocklist (cloud metadata, internal VPC loops, private addresses)
     const blockedHosts = [
@@ -52,15 +52,18 @@ export class RestEngine {
       throw new Error(`SSRF Blocked: Access to cloud metadata service is strictly forbidden.`);
     }
 
-    // Check private RFC 1918 IPv4 ranges if numeric
+    // Block loopback, link-local, private RFC 1918, and IPv6 local ranges.
     const isPrivateIp =
       /^127\./.test(host) ||
       /^10\./.test(host) ||
       /^192\.168\./.test(host) ||
-      /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host);
+      /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host) ||
+      host === '::1' ||
+      host.startsWith('fc') ||
+      host.startsWith('fd') ||
+      host.startsWith('fe80:');
 
-    // Allow localhost only if explicit internal demo port is requested
-    if (isPrivateIp && !host.includes('localhost') && host !== '127.0.0.1') {
+    if (isPrivateIp || host === 'localhost') {
       throw new Error(`SSRF Blocked: Connection to private internal IP addresses is forbidden.`);
     }
 

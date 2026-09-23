@@ -115,6 +115,11 @@ orgRouter.post('/:tenantId/members', enforceTenant, requirePermission('user:invi
       return;
     }
 
+    if (role === 'SUPER_ADMIN') {
+      res.status(403).json({ error: 'Forbidden', message: 'SUPER_ADMIN cannot be assigned through organization membership invites' });
+      return;
+    }
+
     let user = db.getUserByEmail(email);
     if (!user) {
       // Auto-provision user with placeholder password hash

@@ -46,6 +46,16 @@ export async function runRestEngineTests(): Promise<{ passed: number; failed: nu
   }
   assert(privateIpBlocked, 'SSRF blocked 10.x.x.x private network IP');
 
+  for (const internalUrl of ['http://127.0.0.1:3000', 'http://localhost:3000', 'http://[::1]:3000']) {
+    let blocked = false;
+    try {
+      RestEngine.validateEndpointUrl(internalUrl);
+    } catch (err) {
+      blocked = (err as Error).message.includes('SSRF Blocked');
+    }
+    assert(blocked, `SSRF blocked local endpoint ${internalUrl}`);
+  }
+
   // Test 3: JSONPath extraction
   const nestedApiResponse = {
     status: 'success',

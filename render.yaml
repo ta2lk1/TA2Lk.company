@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: industrial-brain-staging
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: hardening/render-ready
+    autoDeploy: true
+    buildCommand: npm ci && npm run lint && npm run build
+    startCommand: npm run start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DEMO_MODE
+        value: true
+      - key: VITE_DEMO_MODE
+        value: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: AUDIT_HMAC_KEY
+        generateValue: true
+      - key: GEMINI_API_KEY
+        sync: false

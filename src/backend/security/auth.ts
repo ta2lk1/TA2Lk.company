@@ -5,7 +5,13 @@
 
 import crypto from 'crypto';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'industrial-brain-default-jwt-secret-phase1-production-safe';
+const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV === 'production'
+  ? (() => { throw new Error('JWT_SECRET must be configured in production'); })()
+  : 'industrial-brain-dev-only-jwt-secret-change-me');
+
+if (process.env.NODE_ENV === 'production' && JWT_SECRET.length < 32) {
+  throw new Error('JWT_SECRET must be at least 32 characters in production');
+}
 
 export interface TokenPayload {
   userId: string;

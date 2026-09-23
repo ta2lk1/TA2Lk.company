@@ -1,7 +1,8 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { GoogleGenAI } from '@google/genai';
 import { db } from '../db/database.ts';
 import { globalGraphStore } from '../../../packages/graph/graphStore.ts';
+import { authenticate, enforceTenant, AuthenticatedRequest } from '../middleware/auth.ts';
 
 export const aiRouter = Router();
 
@@ -16,14 +17,14 @@ const ai = new GoogleGenAI({
 
 const MODELS = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
 
-aiRouter.post('/ai/chat', async (req: Request, res: Response) => {
+aiRouter.post('/ai/chat', authenticate, enforceTenant, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { message, tenantId } = req.body;
+    const { message } = req.body;
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    const targetTenant = tenantId || 'apex-mfg';
+    const targetTenant = req.tenant!.id;
     const nodes = globalGraphStore.listNodesForTenant(targetTenant);
     const auditLogsResult = db.listAuditLogsForTenant(targetTenant, { limit: 5 });
     const auditLogs = auditLogsResult.items || [];
@@ -35,28 +36,35 @@ Recent audit logs: ${JSON.stringify(auditLogs.map(l => l.action))}`;
 
     let reply = '';
 
-    // Try model generation with graceful fallback
-    for (const model of MODELS) {
-      try {
-        const response = await ai.models.generateContent({
-          model,
-          contents: message,
-          config: {
-            systemInstruction,
-            temperature: 0.2,
-          },
-        });
-        if (response.text) {
-          reply = response.text;
-          break;
+    // If quota is exhausted or API key is dummy, skip model calls and use expert knowledge engine directly
+    const useApiKey = process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'dummy-key';
+
+    if (useApiKey) {
+      for (const model of MODELS) {
+        try {
+          const response = await ai.models.generateContent({
+            model,
+            contents: message,
+            config: {
+              systemInstruction,
+              temperature: 0.2,
+            },
+          });
+          if (response.text) {
+            reply = response.text;
+            break;
+          }
+        } catch (err: any) {
+          // If quota exhausted or rate limit hit, gracefully fall back to local knowledge engine
+          if (err?.message?.includes('RESOURCE_EXHAUSTED') || err?.message?.includes('quota') || err?.status === 429 || err?.status === 503) {
+            console.warn(`[AI Copilot] Model ${model} quota/rate limit encountered. Switching to Expert Knowledge Mode.`);
+          }
         }
-      } catch (err: any) {
-        // Silently catch 503 / overload errors and proceed to fallback
       }
     }
 
     if (!reply) {
-      // Deterministic Industrial Expert Knowledge Response (Zero 503 friction)
+      // Deterministic Industrial Expert Knowledge Response (Zero API quota friction)
       const lowerMsg = message.toLowerCase();
       const matchedNode = nodes.find(n => lowerMsg.includes(n.name.toLowerCase()) || lowerMsg.includes(n.canonicalId.toLowerCase()));
       

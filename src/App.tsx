@@ -21,6 +21,7 @@ import { api, UserProfile, OrganizationInfo } from './services/api.ts';
 import { Sparkles } from 'lucide-react';
 
 export default function App() {
+  const demoMode = import.meta.env.VITE_DEMO_MODE === 'true';
   const [currentTab, setCurrentTab] = useState<ActiveTab>('dashboard');
   const [user, setUser] = useState<UserProfile | null>(null);
   const [activeTenant, setActiveTenant] = useState<OrganizationInfo | null>(null);
@@ -39,7 +40,11 @@ export default function App() {
     try {
       setInitialLoading(true);
       if (!api.getToken()) {
-        // Auto-authenticate as default Admin for seamless evaluation
+        if (!demoMode) {
+          setIsAuthModalOpen(true);
+          return;
+        }
+        // Demo-only auto-authentication; never enabled in a normal deployment.
         await api.login('admin@industrial-brain.internal', 'AdminPassword123!');
       }
 
